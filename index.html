@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f8f5f0">
+  <meta name="description" content="SnapJournal - Lưu giữ những khoảnh khắc của bạn.">
+  <title>SnapJournal | Photo Diary</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#" aria-label="SnapJournal trang chủ">
+      <span class="brand-icon">S</span>
+      <span>
+        <strong>SnapJournal</strong>
+        <small>Your moments, your story.</small>
+      </span>
+    </a>
+    <span class="local-badge">
+      <span class="status-dot"></span>
+      Lưu trên thiết bị
+    </span>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">PERSONAL PHOTO DIARY</p>
+      <h1>Giữ lại những<br><span>điều đáng nhớ.</span></h1>
+      <p class="hero-description">
+        Một bức ảnh, một câu chuyện. Lưu lại khoảnh khắc của bạn ngay trên thiết bị.
+      </p>
+    </section>
+
+    <section class="editor panel" aria-labelledby="editor-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">NEW MEMORY</p>
+          <h2 id="editor-title">Tạo nhật ký ảnh</h2>
+        </div>
+        <span class="step-label">01 / CREATE</span>
+      </div>
+
+      <div class="camera-area">
+        <video id="cameraPreview" autoplay playsinline muted hidden></video>
+        <img id="photoPreview" alt="Ảnh xem trước" hidden>
+        <div id="cameraPlaceholder" class="camera-placeholder">
+          <span class="camera-symbol">◎</span>
+          <h3>Một khoảnh khắc mới?</h3>
+          <p>Bật camera hoặc chọn ảnh từ thư viện của bạn.</p>
+        </div>
+      </div>
+
+      <canvas id="photoCanvas" hidden></canvas>
+
+      <div class="camera-actions">
+        <button id="startCameraBtn" class="button button-secondary" type="button">
+          <span>◎</span> Mở camera
+        </button>
+        <button id="captureBtn" class="button button-primary" type="button" disabled>
+          Chụp ảnh
+        </button>
+        <label for="photoInput" class="button button-secondary upload-button">
+          Chọn ảnh
+        </label>
+        <input id="photoInput" type="file" accept="image/*" hidden>
+      </div>
+
+      <p id="cameraMessage" class="message" role="status" aria-live="polite"></p>
+
+      <form id="journalForm">
+        <div class="form-group">
+          <label for="photoTitle">Tiêu đề</label>
+          <input
+            id="photoTitle"
+            name="title"
+            type="text"
+            maxlength="100"
+            placeholder="Ví dụ: Mùa Thu Hà Nội..."
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="photoNote">Ghi chú <span class="optional">(không bắt buộc)</span></label>
+          <textarea
+            id="photoNote"
+            name="note"
+            rows="3"
+            maxlength="1000"
+            placeholder="Bạn muốn lưu lại điều gì về khoảnh khắc này?"
+          ></textarea>
+        </div>
+
+        <button id="savePhotoBtn" class="button button-primary save-button" type="submit" disabled>
+          Lưu vào nhật ký
+        </button>
+      </form>
+    </section>
+
+    <section class="gallery-section" aria-labelledby="gallery-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">YOUR COLLECTION</p>
+          <h2 id="gallery-title">Nhật ký của bạn</h2>
+          <p class="section-description">Những khoảnh khắc đã được lưu giữ.</p>
+        </div>
+        <span id="photoCount" class="count-badge">0 ảnh</span>
+      </div>
+
+      <p id="galleryMessage" class="message" role="status" aria-live="polite"></p>
+
+      <div id="emptyGallery" class="empty-gallery">
+        <span class="empty-icon">▧</span>
+        <h3>Chưa có kỷ niệm nào</h3>
+        <p>Hãy lưu bức ảnh đầu tiên để bắt đầu câu chuyện của bạn.</p>
+      </div>
+
+      <div id="photoGallery" class="photo-gallery"></div>
+    </section>
+
+    <section class="privacy-note">
+      <span>♧</span>
+      <p><strong>Riêng tư theo cách của bạn.</strong><br>
+      Ảnh và ghi chú được lưu trên thiết bị này, không tự động tải lên máy chủ.</p>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>SnapJournal · Every picture holds a memory.</p>
+  </footer>
+
+  <dialog id="photoDialog" class="photo-dialog">
+    <button id="closeDialogBtn" class="dialog-close" type="button" aria-label="Đóng">×</button>
+    <img id="dialogImage" alt="Ảnh nhật ký">
+    <div class="dialog-content">
+      <h2 id="dialogTitle"></h2>
+      <p id="dialogNote"></p>
+      <p id="dialogDate" class="dialog-date"></p>
+      <div class="dialog-actions">
+        <button id="sharePhotoBtn" class="button button-primary" type="button">Chia sẻ ảnh</button>
+        <button id="deletePhotoBtn" class="button button-danger" type="button">Xóa ảnh</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

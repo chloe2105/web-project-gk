@@ -1,0 +1,15 @@
+
+{
+  "id": "./",
+  "name": "SnapJournal - Personal Photo Diary",
+  "short_name": "SnapJournal",
+  "description": "A personal photo journal that stores memories locally.",
+  "lang": "vi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f5f0",
+  "theme_color": "#f8f5f0",
+  "categories": ["lifestyle", "photo", "utilities"]
+}
