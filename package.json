@@ -1,0 +1,11 @@
+{
+  "name": "snapjournal-pwa",
+  "version": "1.0.0",
+  "description": "A Photo Journal PWA for Web Programming Midterm",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "author": "Group GK",
+  "license": "ISC"
+}
