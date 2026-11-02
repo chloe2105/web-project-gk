@@ -39,8 +39,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Do not cache browser extension or unrelated requests.
-  if (!url.pathname.includes("/snapjournal/")) {
+  // Only cache requests within this app's deployment path.
+  const scopePath = new URL(self.registration.scope).pathname;
+  if (!url.pathname.startsWith(scopePath)) {
     return;
   }
 

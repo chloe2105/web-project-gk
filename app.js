@@ -1,7 +1,7 @@
 
 "use strict";
 
-// SnapJournal - Tier 1
+// SnapJournal 
 // Local-first photo journal using IndexedDB. No server or login required.
 
 const DB_NAME = "SnapJournalDB";
@@ -43,8 +43,9 @@ let selectedImageBlob = null;
 let selectedMemoryId = null;
 let previewObjectUrl = null;
 let dialogObjectUrl = null;
+const galleryObjectUrls = new Set();
 
-// ---------- IndexedDB ----------
+// IndexedDB 
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -90,11 +91,15 @@ function addMemory(memory) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const request = transaction.objectStore(STORE_NAME).add(memory);
+    let memoryId;
 
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      memoryId = request.result;
+    };
     request.onerror = () => {
       reject(request.error || new Error("Không thể lưu ảnh."));
     };
+    transaction.oncomplete = () => resolve(memoryId);
     transaction.onabort = () => {
       reject(transaction.error || new Error("Lưu ảnh thất bại."));
     };
@@ -133,17 +138,17 @@ function deleteMemory(id) {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const request = transaction.objectStore(STORE_NAME).delete(id);
 
-    request.onsuccess = () => resolve();
     request.onerror = () => {
       reject(request.error || new Error("Không thể xóa ảnh."));
     };
+    transaction.oncomplete = () => resolve();
     transaction.onabort = () => {
       reject(transaction.error || new Error("Xóa ảnh thất bại."));
     };
   });
 }
 
-// ---------- Camera and image selection ----------
+// Camera and image selection 
 
 function showMessage(element, message, isError = false) {
   element.textContent = message;
@@ -162,6 +167,13 @@ function releaseDialogUrl() {
     URL.revokeObjectURL(dialogObjectUrl);
     dialogObjectUrl = null;
   }
+}
+
+function releaseGalleryUrls() {
+  for (const url of galleryObjectUrls) {
+    URL.revokeObjectURL(url);
+  }
+  galleryObjectUrls.clear();
 }
 
 function stopCamera() {
@@ -202,6 +214,7 @@ async function startCamera() {
   }
 
   stopCamera();
+  elements.startCameraBtn.disabled = true;
 
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({
@@ -223,6 +236,8 @@ async function startCamera() {
     showMessage(elements.cameraMessage, "Camera đã sẵn sàng.");
   } catch (error) {
     stopCamera();
+    elements.photoPreview.hidden = !selectedImageBlob;
+    elements.cameraPlaceholder.hidden = Boolean(selectedImageBlob);
 
     let message = "Không thể mở camera. Hãy kiểm tra quyền truy cập camera.";
 
@@ -235,6 +250,8 @@ async function startCamera() {
     }
 
     showMessage(elements.cameraMessage, message, true);
+  } finally {
+    elements.startCameraBtn.disabled = false;
   }
 }
 
@@ -292,7 +309,7 @@ function handleImageSelection(event) {
   elements.photoInput.value = "";
 }
 
-// ---------- Gallery ----------
+//  Gallery 
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("vi-VN", {
@@ -310,11 +327,7 @@ function createGalleryCard(memory) {
   image.alt = memory.title;
   image.loading = "lazy";
   image.src = URL.createObjectURL(memory.image);
-
-  // Revoke each gallery image URL when the card is removed.
-  image.addEventListener("load", () => {
-    // Keep the URL while the image is displayed.
-  }, { once: true });
+  galleryObjectUrls.add(image.src);
 
   card.dataset.memoryId = String(memory.id);
 
@@ -349,6 +362,7 @@ async function renderGallery() {
   try {
     const memories = await getAllMemories();
 
+    releaseGalleryUrls();
     elements.photoGallery.replaceChildren();
     elements.photoCount.textContent = `${memories.length} ảnh`;
     elements.emptyGallery.hidden = memories.length > 0;
@@ -403,12 +417,16 @@ function closePhotoDialog() {
     elements.photoDialog.close();
   }
 
+  clearPhotoDialog();
+}
+
+function clearPhotoDialog() {
   elements.dialogImage.removeAttribute("src");
   releaseDialogUrl();
   selectedMemoryId = null;
 }
 
-// ---------- Save, delete and share ----------
+//  Save, delete and share 
 
 async function saveCurrentMemory(event) {
   event.preventDefault();
@@ -484,11 +502,18 @@ async function shareCurrentMemory() {
     const memory = await getMemory(selectedMemoryId);
     if (!memory) throw new Error("Không tìm thấy ảnh.");
 
-    const extension = memory.image.type === "image/png" ? "png" : "jpg";
+    const extensionByType = {
+      "image/gif": "gif",
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp"
+    };
+    const extension = extensionByType[memory.image.type] || "jpg";
+    const fileType = memory.image.type || "image/jpeg";
     const file = new File(
       [memory.image],
       `snapjournal-${memory.id}.${extension}`,
-      { type: memory.image.type || "image/jpeg" }
+      { type: fileType }
     );
 
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -513,7 +538,7 @@ async function shareCurrentMemory() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 
       showMessage(elements.galleryMessage, "Đã tải ảnh xuống. Muội có thể chia sẻ ảnh từ thư mục tải xuống.");
     }
@@ -525,7 +550,7 @@ async function shareCurrentMemory() {
   }
 }
 
-// ---------- Events and initialization ----------
+//  Events and initialization 
 
 elements.startCameraBtn.addEventListener("click", () => {
   if (cameraStream) {
@@ -550,10 +575,13 @@ elements.photoDialog.addEventListener("click", (event) => {
   }
 });
 
+elements.photoDialog.addEventListener("close", clearPhotoDialog);
+
 window.addEventListener("pagehide", () => {
   stopCamera();
   releasePreviewUrl();
   releaseDialogUrl();
+  releaseGalleryUrls();
 });
 
 async function initializeApp() {
